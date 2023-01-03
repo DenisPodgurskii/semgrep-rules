@@ -1,0 +1,5 @@
+#@ def vanilla_sanitizers():
+- pattern: DOMPurify.sanitize(...)
+- pattern: this.sanitizer.sanitize(...)
+- pattern: $S.escapeHTML(...)
+#@ end

@@ -1,0 +1,20 @@
+#@ def jquery_sources():
+- pattern-either:
+      - patterns:
+            - pattern-either:
+                  - pattern: $JQ(location).$METHOD("$LS")
+                  - pattern: $JQ($X.location).$METHOD("$LS")
+            - metavariable-regex:
+                  metavariable: $LS
+                  regex: ^(href|host|hash|origin|search|hostname|pathname)$
+            - metavariable-pattern:
+                  metavariable: $JQ
+                  pattern-either:
+                      - pattern: $
+                      - pattern: jQuery
+            - metavariable-pattern:
+                  metavariable: $METHOD
+                  pattern-either:
+                      - pattern: attr
+                      - pattern: prop
+#@ end

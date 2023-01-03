@@ -1,0 +1,59 @@
+#@ def jquery_sinks():
+- patterns:
+      - pattern-either:
+            - pattern: $JQ(...).$METHOD("$LS", $SRC)
+      - metavariable-pattern:
+            metavariable: $JQ
+            pattern-either:
+                - pattern: $
+                - pattern: jQuery
+      - metavariable-pattern:
+            metavariable: $METHOD
+            pattern-either:
+                - pattern: attr
+                - pattern: prop
+      - metavariable-regex:
+            metavariable: $LS
+            regex: ^(href|host|hash|origin|search|hostname|pathname)$
+      - metavariable-pattern:
+            metavariable: $SRC
+            patterns:
+                - pattern-not: |
+                      "..."
+                - pattern-not: |
+                      "..." + $VALUE
+                - pattern-not: |
+                      `...${$VALUE}`
+                - pattern-not: |
+                      "..." + $VALUE + "..."
+                - pattern-not: |
+                      `...${$VALUE}...`
+
+- patterns:
+      - pattern-either:
+            - pattern: $JQ.$METHOD($VAR,...)
+            - pattern: $JQ(...).$METHOD($VAR,...)
+      - pattern-not: $JQ.$METHOD("...",...)
+      - pattern-not: $JQ(...).$METHOD("...",...)
+      - metavariable-pattern:
+            metavariable: $JQ
+            pattern-either:
+                - pattern: $
+                - pattern: jQuery
+      - metavariable-regex:
+            metavariable: $METHOD
+            regex: ^(html|append|prepend|wrap|wrapInner|wrapAll|before|after|globalEval|getScript|parseHTML)$
+
+- patterns:
+      - pattern-either:
+            - pattern: $JQ(...).$METHOD($VAR,...)
+      - pattern-not: $JQ("...",...).$METHOD(...)
+      - metavariable-pattern:
+            metavariable: $JQ
+            pattern-either:
+                - pattern: $
+                - pattern: jQuery
+      - metavariable-regex:
+            metavariable: $METHOD
+            regex: ^(appendTo|insertAfter|insertBefore|prependTo)$
+#@ end

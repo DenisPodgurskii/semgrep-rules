@@ -1,0 +1,51 @@
+#@ load("/sanitizers/vanilla.lib.yaml", "vanilla_sanitizers")
+
+#@ load("/sources/vanilla.lib.yaml", "vanilla_sources")
+#@ load("/sources/jquery.lib.yaml", "jquery_sources")
+
+#@ load("/sinks/dom_xss/vanilla.lib.yaml", "vanilla_sinks")
+#@ load("/sinks/dom_xss/jquery.lib.yaml", "jquery_sinks")
+
+#! -----SETTINGS-----
+#@ rule_id="dom-xss-client-side"
+#@ direct = rule_id + "-direct"
+
+rules:
+    - id: #@ direct
+      message: |
+          DOM XSS is an attack in which Javascript takes data from an attacker
+          controllable source, and passes it to a sink supporting dynamic code
+          execution. By doing so, the attacker is then able to execute malicious
+          Javascript. A common attack sequence is using the URL as the source, via
+          the window.location object, and passing it to a sink such as eval() or
+          innerHTML.
+      metadata:
+          license: GNU Affero General Public License v3.0[AGPL v3.0]
+          cwe:
+              - "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          owasp:
+              - A07:2017 - Cross-Site Scripting (XSS)
+              - A03:2021 - Injection
+          references:
+              - https://owasp.org/www-community/attacks/DOM_Based_XSS
+          category: security
+          technology:
+              - browser
+          options:
+              symbolic_propagation: true
+      mode: taint
+      severity: ERROR
+      languages:
+          - javascript
+          - typescript
+      pattern-sanitizers:
+          - pattern-either: #@ vanilla_sanitizers()
+      #!SOURCES
+      pattern-sources:
+          - pattern-either: #@ vanilla_sources()
+          - pattern-either: #@ jquery_sources()
+      #!SINKS
+      pattern-sinks:
+          - pattern-either: #@ vanilla_sinks()
+          - pattern-either: #@ jquery_sinks()
+
