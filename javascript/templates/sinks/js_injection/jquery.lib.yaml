@@ -1,0 +1,39 @@
+#@ def jquery_sinks():
+- patterns:
+        - pattern-either:
+                - pattern: $JQ(...).$METHOD($S)
+                - pattern: $JQ.$METHOD($S)
+        - metavariable-pattern:
+                metavariable: $JQ
+                pattern-either:
+                      - pattern: $
+                      - pattern: jQuery
+        - metavariable-pattern:
+                metavariable: $METHOD
+                pattern-either:
+                      - pattern: html
+                      - pattern: parseHTML
+                      - pattern: globalEval
+                      - pattern: getScript
+- patterns:
+        - pattern: $EL.$ELEMMETHOD($S)
+        - metavariable-pattern:
+                metavariable: $ELEMMETHOD
+                pattern-either:
+                      - pattern: add
+                      - pattern: append
+                      - pattern: after
+                      - pattern: before
+                      - pattern: html
+                      - pattern: prepend
+                      - pattern: replaceWith
+                      - pattern: wrap
+                      - pattern: wrapAll
+        - focus-metavariable: $S
+        - metavariable-pattern:
+                metavariable: $S
+                patterns:
+                      - pattern-not: |
+                              "..."
+
+#@ end
