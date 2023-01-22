@@ -1,0 +1,244 @@
+rules:
+- id: dom-xss-client-side-direct
+  message: "DOM-based JavaScript-injection vulnerabilities arise when a script executes attacker-controllable data as JavaScript. \nAn attacker may be able to use the vulnerability to construct a URL that, if visited by another user, will cause \narbitrary JavaScript supplied by the attacker to execute in the context of the user's browser session.\n"
+  metadata:
+    license: GNU Affero General Public License v3.0[AGPL v3.0]
+    cwe:
+    - 'CWE-79: Improper Neutralization of Input During Web Page Generation (''Cross-site Scripting'')'
+    owasp:
+    - A07:2017 - Cross-Site Scripting (XSS)
+    - A03:2021 - Injection
+    references:
+    - https://owasp.org/www-community/attacks/DOM_Based_XSS
+    category: security
+    technology:
+    - browser
+    options:
+      symbolic_propagation: true
+  mode: taint
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  pattern-sanitizers:
+  - pattern-either:
+    - pattern: DOMPurify.sanitize(...)
+    - pattern: this.sanitizer.sanitize(...)
+    - pattern: $S.escapeHTML(...)
+  pattern-sources:
+  - pattern-either:
+    - pattern-either:
+      - pattern: location
+      - pattern: $X.location
+    - patterns:
+      - pattern-either:
+        - pattern: window.$PROP
+        - pattern: $X.window.$PROP
+      - metavariable-pattern:
+          metavariable: $PROP
+          pattern-regex: ^(name|frames|frameElement)$
+    - patterns:
+      - pattern-either:
+        - pattern: document.$PROP
+        - pattern: $X.document.$PROP
+      - metavariable-pattern:
+          metavariable: $PROP
+          pattern-regex: ^(cookie|URL|documentURI|baseURI|referrer)$
+    - patterns:
+      - pattern-either:
+        - pattern: <... document.$METHOD ...>.$PROP
+        - pattern: <... $X.document.$METHOD  ...>.$PROP
+      - metavariable-pattern:
+          metavariable: $METHOD
+          patterns:
+          - pattern-regex: ^(getElementById|getElementsByName|getElementsByClassName|getElementsByTagName|querySelectorAll|querySelector|forms)$
+          - metavariable-pattern:
+              metavariable: $PROP
+              patterns:
+              - pattern-regex: ^(innerText|value|textContent|text)$
+    - patterns:
+      - pattern-either:
+        - pattern-inside: |
+            ...
+            $TAINTED =  $SOURCE
+            ...
+        - pattern-inside: |
+            ...
+            function $TAINTED (...) {
+                ...
+                $SOURCE
+                ...
+            }
+            ...
+      - pattern-either:
+        - pattern: $VAR = <... $TAINTED ...>
+        - pattern: $VAR(...,<... $TAINTED ...>,...)
+      - metavariable-pattern:
+          metavariable: $SOURCE
+          pattern-either:
+          - pattern-regex: (location|window.name|window.frames|window.frameElement|document.cookie|document.URL|document.documentURI|document.baseURI|document.referrer)
+  - pattern-either:
+    - pattern-either:
+      - patterns:
+        - pattern-either:
+          - pattern: $JQ(location).$METHOD("$LS")
+          - pattern: $JQ($X.location).$METHOD("$LS")
+        - metavariable-regex:
+            metavariable: $LS
+            regex: ^(href|host|hash|origin|search|hostname|pathname)$
+        - metavariable-pattern:
+            metavariable: $JQ
+            pattern-either:
+            - pattern: $
+            - pattern: jQuery
+        - metavariable-pattern:
+            metavariable: $METHOD
+            pattern-either:
+            - pattern: attr
+            - pattern: prop
+  pattern-sinks:
+  - pattern-either:
+    - patterns:
+      - pattern-either:
+        - pattern: <... eval(...,$S,...) ...>
+        - pattern: <... $X.eval(...,$S,...) ...>
+        - pattern: <... eval.call(...,$S,...) ...>
+        - pattern: <... eval.apply(...,$S,...) ...>
+        - pattern: <... (..., eval)($S) ...>
+        - pattern: <... Function(...,$S,...) ...>
+        - pattern: <... $X.Function(...,$S,...) ...>
+        - pattern: <... new Function(...,$S,...) ...>
+        - pattern: <... new $X.Function(...,$S,...) ...>
+        - pattern: <... setInterval(...,$S,...) ...>
+        - pattern: <... $X.setInterval(...,$S,...) ...>
+        - pattern: <... setInterval.call(...,$S,...) ...>
+        - pattern: <... (..., setInterval)($S) ...>
+        - pattern: <... setTimeout(...,$S,...) ...>
+        - pattern: <... $X.setTimeout(...,$S,...) ...>
+        - pattern: <... setTimeout.call(...,$S,...) ...>
+        - pattern: <... (..., setTimeout)($S) ...>
+        - pattern: <... setImmediate(...,$S,...) ...>
+        - pattern: <... $X.setImmediate(...,$S,...) ...>
+        - pattern: <... setImmediate.call(...,$S,...) ...>
+        - pattern: <... (..., setImmediate)($S) ...>
+        - pattern: <... document.execCommand(...,$S,...) ...>
+        - pattern: <... $X.document.execCommand(...,$S,...) ...>
+        - pattern: <... document.execCommand.call(...,$S,...) ...>
+        - pattern: <... (..., document.execCommand)($S) ...>
+        - pattern: <... execScript(...,$S,...) ...>
+        - pattern: <... $X.execScript(...,$S,...) ...>
+        - pattern: <... execScript.call(...,$S,...) ...>
+        - pattern: <... (..., execScript)($S) ...>
+      - pattern-not-inside: |
+          new Promise($A => setTimeout($A, ...))
+      - pattern-not-inside: |
+          new Promise($A => { setTimeout($A, ...) })
+    - patterns:
+      - pattern-either:
+        - pattern: |
+            ...
+            const $ANY = eval
+            ...
+        - pattern: |
+            ...
+            const $ANY = setTimeout
+            ...
+        - pattern: |
+            ...
+            const $ANY = setInterval
+            ...
+        - pattern: |
+            ...
+            const $ANY = setImmediate
+            ...
+        - pattern: |
+            ...
+            const $ANY = document.execCommand
+            ...
+        - pattern: |
+            ...
+            const $ANY = execScript
+            ...
+      - pattern-either:
+        - pattern: $ANY($S)
+        - pattern: (..., $ANY)($S)
+        - pattern: $ANY.call($S)
+        - pattern: $ANY.apply($S)
+      - focus-metavariable: $S
+    - patterns:
+      - pattern: |
+          ...
+          $EL = eval.bind(...)
+          ...
+          $EL($S)
+          ...
+      - focus-metavariable: $S
+    - patterns:
+      - pattern: <... constructor.constructor($S)() ...>
+    - patterns:
+      - pattern-either:
+        - patterns:
+          - pattern-either:
+            - pattern: <... document.$METHOD ...>.$P = $SRC
+            - pattern: <... $X.document.$METHOD ...>.$P = $SRC
+          - metavariable-pattern:
+              metavariable: $METHOD
+              patterns:
+              - pattern-either:
+                - pattern: scripts
+        - patterns:
+          - pattern-either:
+            - pattern-inside: |
+                ...
+                $EL = <... document.createElement("script") ...>
+                ...
+            - pattern-inside: |
+                ...
+                $EL = <...  $X.document.createElement("script")  ...>
+                ...
+          - pattern-either:
+            - pattern: $SCRIPT.$P = $SRC
+            - pattern: $SCRIPT.setAttribute("$P", $SRC)
+          - metavariable-comparison:
+              metavariable: $EL
+              comparison: str($SCRIPT) == str($EL)
+      - metavariable-regex:
+          metavariable: $P
+          regex: ^(src|text|innerText|textContent)$
+  - pattern-either:
+    - patterns:
+      - pattern-either:
+        - pattern: $JQ(...).$METHOD($S)
+        - pattern: $JQ.$METHOD($S)
+      - metavariable-pattern:
+          metavariable: $JQ
+          pattern-either:
+          - pattern: $
+          - pattern: jQuery
+      - metavariable-pattern:
+          metavariable: $METHOD
+          pattern-either:
+          - pattern: html
+          - pattern: parseHTML
+          - pattern: globalEval
+          - pattern: getScript
+    - patterns:
+      - pattern: $EL.$ELEMMETHOD($S)
+      - metavariable-pattern:
+          metavariable: $ELEMMETHOD
+          pattern-either:
+          - pattern: add
+          - pattern: append
+          - pattern: after
+          - pattern: before
+          - pattern: html
+          - pattern: prepend
+          - pattern: replaceWith
+          - pattern: wrap
+          - pattern: wrapAll
+      - focus-metavariable: $S
+      - metavariable-pattern:
+          metavariable: $S
+          patterns:
+          - pattern-not: |
+              "..."
