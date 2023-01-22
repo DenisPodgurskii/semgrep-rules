@@ -1,0 +1,202 @@
+rules:
+- id: dom-xss-client-side-direct
+  message: |
+    DOM XSS is an attack in which Javascript takes data from an attacker
+    controllable source, and passes it to a sink supporting dynamic code
+    execution. By doing so, the attacker is then able to execute malicious
+    Javascript. A common attack sequence is using the URL as the source, via
+    the window.location object, and passing it to a sink such as eval() or
+    innerHTML.
+  metadata:
+    license: GNU Affero General Public License v3.0[AGPL v3.0]
+    cwe:
+    - 'CWE-79: Improper Neutralization of Input During Web Page Generation (''Cross-site Scripting'')'
+    owasp:
+    - A07:2017 - Cross-Site Scripting (XSS)
+    - A03:2021 - Injection
+    references:
+    - https://owasp.org/www-community/attacks/DOM_Based_XSS
+    category: security
+    technology:
+    - browser
+    options:
+      symbolic_propagation: true
+  mode: taint
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  pattern-sanitizers:
+  - pattern-either:
+    - pattern: DOMPurify.sanitize(...)
+    - pattern: this.sanitizer.sanitize(...)
+    - pattern: $S.escapeHTML(...)
+  pattern-sources:
+  - pattern-either:
+    - pattern-either:
+      - pattern: location
+      - pattern: $X.location
+    - patterns:
+      - pattern-either:
+        - pattern: window.$PROP
+        - pattern: $X.window.$PROP
+      - metavariable-pattern:
+          metavariable: $PROP
+          pattern-regex: ^(name|frames|frameElement)$
+    - patterns:
+      - pattern-either:
+        - pattern: document.$PROP
+        - pattern: $X.document.$PROP
+      - metavariable-pattern:
+          metavariable: $PROP
+          pattern-regex: ^(cookie|URL|documentURI|baseURI|referrer)$
+    - patterns:
+      - pattern-either:
+        - pattern: <... document.$METHOD ...>.$PROP
+        - pattern: <... $X.document.$METHOD  ...>.$PROP
+      - metavariable-pattern:
+          metavariable: $METHOD
+          patterns:
+          - pattern-regex: ^(getElementById|getElementsByName|getElementsByClassName|getElementsByTagName|querySelectorAll|querySelector|forms)$
+          - metavariable-pattern:
+              metavariable: $PROP
+              patterns:
+              - pattern-regex: ^(innerText|value|textContent|text)$
+    - patterns:
+      - pattern-either:
+        - pattern-inside: |
+            ...
+            $TAINTED =  $SOURCE
+            ...
+        - pattern-inside: |
+            ...
+            function $TAINTED (...) {
+                ...
+                $SOURCE
+                ...
+            }
+            ...
+      - pattern-either:
+        - pattern: $VAR = <... $TAINTED ...>
+        - pattern: $VAR(...,<... $TAINTED ...>,...)
+      - metavariable-pattern:
+          metavariable: $SOURCE
+          pattern-either:
+          - pattern-regex: (location|window.name|window.frames|window.frameElement|document.cookie|document.URL|document.documentURI|document.baseURI|document.referrer)
+  - pattern-either:
+    - pattern-either:
+      - patterns:
+        - pattern-either:
+          - pattern: $JQ(location).$METHOD("$LS")
+          - pattern: $JQ($X.location).$METHOD("$LS")
+        - metavariable-regex:
+            metavariable: $LS
+            regex: ^(href|host|hash|origin|search|hostname|pathname)$
+        - metavariable-pattern:
+            metavariable: $JQ
+            pattern-either:
+            - pattern: $
+            - pattern: jQuery
+        - metavariable-pattern:
+            metavariable: $METHOD
+            pattern-either:
+            - pattern: attr
+            - pattern: prop
+  pattern-sinks:
+  - pattern-either:
+    - patterns:
+      - pattern-either:
+        - pattern: $X.setAttribute("$SINK", $SOURCE)
+        - pattern: $X.setAttribute(...,"$SINK", $SOURCE)
+        - pattern: location = $SOURCE
+        - pattern: $X.location = $SOURCE
+        - pattern: location.$LS = $SOURCE
+        - pattern: $X.location.$LS = $SOURCE
+      - focus-metavariable: $SOURCE
+      - metavariable-regex:
+          metavariable: $SINK
+          regex: ^(href|hash|origin|search|pathname)$
+      - metavariable-pattern:
+          metavariable: $SOURCE
+          patterns:
+          - pattern-not: |
+              "..."
+          - pattern-not: |
+              "..." + $VALUE
+          - pattern-not: |
+              `...${$VALUE}`
+          - pattern-not: |
+              "..." + $VALUE + "..."
+          - pattern-not: |
+              `...${$VALUE}...`
+    - patterns:
+      - pattern-either:
+        - pattern: window.open(...,$SOURCE,...)
+        - pattern: $X.window.open(...,$SOURCE,...)
+        - pattern: $SINK.innerHTML = $SOURCE
+        - pattern: $SINK.innerHTML(...,$SOURCE,...)
+        - pattern: $SINK.outerHTML = $SOURCE
+        - pattern: $SINK.outerHTML(...,$SOURCE,...)
+        - pattern: $SINK.insertAdjacentHTML = $SOURCE
+        - pattern: $SINK.insertAdjacentHTML(...,$SOURCE,...)
+        - pattern: document.write(...,$SOURCE,...)
+        - pattern: $SINK.document.write(...,$SOURCE,...)
+        - pattern: document.writeln(...,$SOURCE,...)
+        - pattern: $SINK.document.writeln(...,$SOURCE,...)
+      - focus-metavariable: $SOURCE
+  - pattern-either:
+    - patterns:
+      - pattern-either:
+        - pattern: $JQ(...).$METHOD("$SINK", $SOURCE)
+      - metavariable-pattern:
+          metavariable: $JQ
+          pattern-either:
+          - pattern: $
+          - pattern: jQuery
+      - metavariable-pattern:
+          metavariable: $METHOD
+          pattern-either:
+          - pattern: attr
+          - pattern: prop
+      - metavariable-regex:
+          metavariable: $SINK
+          regex: ^(href|host|hash|origin|search|hostname|pathname)$
+      - metavariable-pattern:
+          metavariable: $SOURCE
+          patterns:
+          - pattern-not: |
+              "..."
+          - pattern-not: |
+              "..." + $VALUE
+          - pattern-not: |
+              `...${$VALUE}`
+          - pattern-not: |
+              "..." + $VALUE + "..."
+          - pattern-not: |
+              `...${$VALUE}...`
+    - patterns:
+      - pattern-either:
+        - pattern: $JQ.$METHOD($SOURCE,...)
+        - pattern: $JQ(...).$METHOD($SOURCE,...)
+      - pattern-not: $JQ.$METHOD("...",...)
+      - pattern-not: $JQ(...).$METHOD("...",...)
+      - metavariable-pattern:
+          metavariable: $JQ
+          pattern-either:
+          - pattern: $
+          - pattern: jQuery
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(html|append|prepend|wrap|wrapInner|wrapAll|before|after|globalEval|getScript|parseHTML)$
+    - patterns:
+      - pattern-either:
+        - pattern: $JQ(...).$METHOD($SOURCE,...)
+      - pattern-not: $JQ("...",...).$METHOD(...)
+      - metavariable-pattern:
+          metavariable: $JQ
+          pattern-either:
+          - pattern: $
+          - pattern: jQuery
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(appendTo|insertAfter|insertBefore|prependTo)$
