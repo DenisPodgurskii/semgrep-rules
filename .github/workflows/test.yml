@@ -30,11 +30,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: cd  ${{ inputs.working_directory }}
       - run: ls
-      - run: |
-      
-          ytt -f templates --output-files ./
-
-
+      - run: ytt -f javascript/templates --output-files ./
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
