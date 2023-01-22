@@ -28,7 +28,9 @@ jobs:
       - uses: carvel-dev/setup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - run: cd  ${{ inputs.working_directory }}
       - run: |
+      
           ytt -f templates --output-files ./
 
 
