@@ -7,7 +7,7 @@
 #@ load("/sinks/js_injection/jquery.lib.yaml", "jquery_sinks")
 
 #! -----SETTINGS-----
-#@ rule_id="dom-xss-client-side"
+#@ rule_id="dom-js-injection-client-side"
 #@ direct = rule_id + "-direct"
 
 rules:
