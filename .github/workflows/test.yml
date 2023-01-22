@@ -28,9 +28,10 @@ jobs:
       - uses: carvel-dev/setup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run ytt to build rules
-        run: |
+      - run: |
           cd  ${{ inputs.working_directory }}
+          
+      - name: Run ytt to build rules
           ytt -f javascript/templates --output-files ./
     
           git config --local user.email "test@github.com"
