@@ -42,7 +42,8 @@ jobs:
             echo "::set-env name=changes_exist::true"
           fi
       - name: commit/push updates
-        if: env.changes_exist == 'true'          
+        if: env.changes_exist == 'true'
+        run: |
           git config --local user.email "test@github.com"
           git config --local user.name "GitHub Action test"
           git add .
