@@ -32,6 +32,7 @@ jobs:
           cd  ${{ inputs.working_directory }}
           
       - name: Run ytt to build rules
+        run: |
           ytt -f javascript/templates --output-files ./
     
           git config --local user.email "test@github.com"
