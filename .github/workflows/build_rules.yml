@@ -33,7 +33,7 @@ jobs:
           
       - name: Run ytt to build rules
         run: |
-          ytt -f javascript/templates --output-files javascript/
+          ytt -f javascript/templates --output-files rules/javascript
     
           git config --local user.email "test@github.com"
           git config --local user.name "GitHub Action test"
