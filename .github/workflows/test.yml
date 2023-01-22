@@ -29,6 +29,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: cd  ${{ inputs.working_directory }}
+      - run: ls
       - run: |
       
           ytt -f templates --output-files ./
