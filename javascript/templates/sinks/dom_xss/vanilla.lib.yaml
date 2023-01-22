@@ -1,18 +1,18 @@
 #@ def vanilla_sinks():
 - patterns:
       - pattern-either:
-            - pattern: $X.setAttribute("$LS", $SRC)
-            - pattern: $X.setAttribute(...,"$LS", $SRC)
-            - pattern: location = $SRC
-            - pattern: $X.location = $SRC
-            - pattern: location.$LS = $SRC
-            - pattern: $X.location.$LS = $SRC
-      - focus-metavariable: $SRC
+            - pattern: $X.setAttribute("$SINK", $SOURCE)
+            - pattern: $X.setAttribute(...,"$SINK", $SOURCE)
+            - pattern: location = $SOURCE
+            - pattern: $X.location = $SOURCE
+            - pattern: location.$LS = $SOURCE
+            - pattern: $X.location.$LS = $SOURCE
+      - focus-metavariable: $SOURCE
       - metavariable-regex:
-            metavariable: $LS
+            metavariable: $SINK
             regex: ^(href|hash|origin|search|pathname)$
       - metavariable-pattern:
-            metavariable: $SRC
+            metavariable: $SOURCE
             patterns:
                 - pattern-not: |
                       "..."
@@ -26,17 +26,17 @@
                       `...${$VALUE}...`
 - patterns:
       - pattern-either:
-            - pattern: window.open(...,$SRC,...)
-            - pattern: $X.window.open(...,$SRC,...)
-            - pattern: $SINK.innerHTML = $SRC
-            - pattern: $SINK.innerHTML(...,$SRC,...)
-            - pattern: $SINK.outerHTML = $SRC
-            - pattern: $SINK.outerHTML(...,$SRC,...)
-            - pattern: $SINK.insertAdjacentHTML = $SRC
-            - pattern: $SINK.insertAdjacentHTML(...,$SRC,...)
-            - pattern: document.write(...,$SRC,...)
-            - pattern: $SINK.document.write(...,$SRC,...)
-            - pattern: document.writeln(...,$SRC,...)
-            - pattern: $SINK.document.writeln(...,$SRC,...)
-      - focus-metavariable: $SRC
+            - pattern: window.open(...,$SOURCE,...)
+            - pattern: $X.window.open(...,$SOURCE,...)
+            - pattern: $SINK.innerHTML = $SOURCE
+            - pattern: $SINK.innerHTML(...,$SOURCE,...)
+            - pattern: $SINK.outerHTML = $SOURCE
+            - pattern: $SINK.outerHTML(...,$SOURCE,...)
+            - pattern: $SINK.insertAdjacentHTML = $SOURCE
+            - pattern: $SINK.insertAdjacentHTML(...,$SOURCE,...)
+            - pattern: document.write(...,$SOURCE,...)
+            - pattern: $SINK.document.write(...,$SOURCE,...)
+            - pattern: document.writeln(...,$SOURCE,...)
+            - pattern: $SINK.document.writeln(...,$SOURCE,...)
+      - focus-metavariable: $SOURCE
 #@ end

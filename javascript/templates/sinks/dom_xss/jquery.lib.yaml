@@ -1,7 +1,7 @@
 #@ def jquery_sinks():
 - patterns:
       - pattern-either:
-            - pattern: $JQ(...).$METHOD("$LS", $SRC)
+            - pattern: $JQ(...).$METHOD("$SINK", $SOURCE)
       - metavariable-pattern:
             metavariable: $JQ
             pattern-either:
@@ -13,10 +13,10 @@
                 - pattern: attr
                 - pattern: prop
       - metavariable-regex:
-            metavariable: $LS
+            metavariable: $SINK
             regex: ^(href|host|hash|origin|search|hostname|pathname)$
       - metavariable-pattern:
-            metavariable: $SRC
+            metavariable: $SOURCE
             patterns:
                 - pattern-not: |
                       "..."
@@ -31,8 +31,8 @@
 
 - patterns:
       - pattern-either:
-            - pattern: $JQ.$METHOD($VAR,...)
-            - pattern: $JQ(...).$METHOD($VAR,...)
+            - pattern: $JQ.$METHOD($SOURCE,...)
+            - pattern: $JQ(...).$METHOD($SOURCE,...)
       - pattern-not: $JQ.$METHOD("...",...)
       - pattern-not: $JQ(...).$METHOD("...",...)
       - metavariable-pattern:
@@ -46,7 +46,7 @@
 
 - patterns:
       - pattern-either:
-            - pattern: $JQ(...).$METHOD($VAR,...)
+            - pattern: $JQ(...).$METHOD($SOURCE,...)
       - pattern-not: $JQ("...",...).$METHOD(...)
       - metavariable-pattern:
             metavariable: $JQ
