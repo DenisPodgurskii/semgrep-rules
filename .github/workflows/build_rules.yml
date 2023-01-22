@@ -34,20 +34,11 @@ jobs:
       - name: Run ytt to build rules
         run: |
           ytt -f javascript/templates --output-files rules/javascript
-      - name: check for changes
-        run: |
-          if git diff --exit-code; then
-            echo "::set-env name=changes_exist::false"
-          else
-            echo "::set-env name=changes_exist::true"
-          fi
-      - name: commit/push updates
-        if: env.changes_exist == 'true'
-        run: |
+
           git config --local user.email "test@github.com"
           git config --local user.name "GitHub Action test"
           git add .
-          git commit -m "Add/update rules"
+          git commit -m "Add/update rules" || echo "Nothing to update"
 
       - uses: ad-m/github-push-action@master
         with:
