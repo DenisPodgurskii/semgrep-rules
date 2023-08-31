@@ -1,0 +1,5 @@
+#@ def jquery_sinks():
+
+- patterns:
+        - pattern: $(location).attr('hostname')
+#@ end

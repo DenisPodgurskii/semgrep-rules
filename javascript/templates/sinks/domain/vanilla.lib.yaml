@@ -1,0 +1,24 @@
+#@ def vanilla_sinks():
+- patterns:
+        - pattern-either:
+                - pattern: |
+                        <... document.domain = $S  ...>
+                - pattern: |
+                        <... $X.document.domain = $S  ...>
+        - focus-metavariable: $S
+- patterns:
+        - pattern-either:
+                - pattern-inside: |
+                        ...
+                        $EL = <... document ...>
+                        ...
+                - pattern-inside: |
+                        ...
+                        $EL = <... $X.document  ...>
+                        ...
+        - pattern: $DOC.domain = $S
+        - focus-metavariable: $S
+        - metavariable-comparison:
+                metavariable: $DOC
+                comparison: str($DOC) == str($EL)
+#@ end

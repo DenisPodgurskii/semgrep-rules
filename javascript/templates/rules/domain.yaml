@@ -1,0 +1,45 @@
+#@ load("/sanitizers/vanilla.lib.yaml", "vanilla_sanitizers")
+
+#@ load("/sources/vanilla.lib.yaml", "vanilla_sources")
+#@ load("/sources/jquery.lib.yaml", "jquery_sources")
+
+#@ load("/sinks/domain/vanilla.lib.yaml", "vanilla_sinks")
+#@ load("/sinks/domain/jquery.lib.yaml", "jquery_sinks")
+
+#! -----SETTINGS-----
+#@ rule_id="domain-manipulation"
+#@ direct = rule_id + "-direct"
+
+rules:
+    - id: #@ direct
+      message: |
+          Document-domain manipulation vulnerabilities arise when a script uses attacker-controllable data to set the document. domain property. An attacker may be able to use the vulnerability to construct a URL that, if visited by another user, will cause the response page to set an arbitrary document.
+      metadata:
+          license: GNU Affero General Public License v3.0[AGPL v3.0]
+          cwe:
+              - "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          owasp:
+              - A07:2017 - Cross-Site Scripting (XSS)
+              - A03:2021 - Injection
+          references:
+              - https://owasp.org/www-community/attacks/DOM_Based_XSS
+          category: security
+          technology:
+              - browser
+          options:
+              symbolic_propagation: true
+      mode: taint
+      severity: ERROR
+      languages:
+          - javascript
+          - typescript
+
+      #!SOURCES
+      pattern-sources:
+          - pattern-either: #@ vanilla_sources()
+          - pattern-either: #@ jquery_sources()
+      #!SINKS
+      pattern-sinks:
+          - pattern-either: #@ vanilla_sinks()
+          - pattern-either: #@ jquery_sinks()
+
